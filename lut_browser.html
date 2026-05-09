@@ -1,0 +1,300 @@
+// 这个 HTML 文件是一个简单的 LUT 浏览器，允许用户查看和选择不同的 LUT（查找表）文件，并生成相应的命令行指令来应用这些 LUT。用户可以通过搜索和品牌过滤来快速找到需要的 LUT，并且可以选择多个 LUT 来一次性生成命令。生成的命令会显示在页面底部，并提供一键复制功能，方便用户将命令粘贴到终端中执行。
+// 使用说明：
+// 1. 将此 HTML 文件保存到本地，更改属于你的路径（93 - 95 行），并用浏览器打开。
+// 2. 在搜索框中输入关键词来过滤 LUT 列表，或者点击品牌按钮来按品牌筛选。
+// 3. 点击 LUT 卡片来选择或取消选择 LUT，已选择的 LUT 会高亮显示。
+// 4. 点击“全选当前”按钮可以选择当前过滤后的所有 LUT，点击“清除选择”可以取消所有选择。
+// 5. 点击“生成命令”按钮会在页面底部显示生成的命令行指令，包含所有已选择的 LUT。如果没有选择任何 LUT，则会生成包含所有 LUT 的命令。
+// 6. 点击命令框中的“复制”按钮可以将生成的命令复制到剪贴板，方便粘贴到终端中执行。  
+
+// 所有的Lut文件由小红书用户 Roger Wang，id:7790482041, 提供。
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUT 浏览器</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f0; color: #1a1a1a; padding: 2rem; min-height: 100vh; }
+.wrap { max-width: 900px; margin: 0 auto; }
+.header { padding-bottom: 1rem; border-bottom: 1px solid #e0e0d8; margin-bottom: 1.2rem; }
+.header h1 { font-size: 22px; font-weight: 500; }
+.header p { font-size: 13px; color: #666; margin-top: 4px; }
+.controls { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+.controls input { flex: 1; min-width: 180px; font-size: 13px; padding: 7px 12px; border: 1px solid #ccc; border-radius: 8px; background: #fff; color: #1a1a1a; outline: none; }
+.controls input:focus { border-color: #888; }
+.filter-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.fbtn { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #ccc; background: transparent; color: #555; cursor: pointer; }
+.fbtn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.card { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: border-color 0.15s; user-select: none; }
+.card:hover { border-color: #aaa; }
+.card.selected { border-color: #0066cc; background: #eaf3fb; }
+.card-brand { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #999; margin-bottom: 3px; }
+.card-name { font-size: 12px; color: #1a1a1a; line-height: 1.4; }
+.card.selected .card-name { color: #0055aa; }
+.bar { margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid #e0e0d8; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.bar-count { font-size: 13px; color: #666; flex: 1; }
+.bar button { font-size: 13px; padding: 7px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; }
+.bar button:hover { background: #f0f0ea; }
+.bar button.primary { background: #1a1a1a; color: #fff; border-color: transparent; }
+.bar button.primary:hover { background: #333; }
+.empty { text-align: center; padding: 2rem; color: #aaa; font-size: 13px; }
+.cmd-box { margin-top: 1rem; background: #1a1a1a; color: #e0e0e0; border-radius: 10px; padding: 1rem 1.25rem; font-family: "SF Mono", "Fira Code", monospace; font-size: 12px; line-height: 1.7; white-space: pre-wrap; word-break: break-all; display: none; }
+.cmd-box .copy-btn { float: right; font-size: 11px; padding: 3px 10px; border-radius: 6px; border: 1px solid #555; background: transparent; color: #ccc; cursor: pointer; margin-top: -2px; font-family: inherit; }
+.cmd-box .copy-btn:hover { background: #333; }
+
+@media (prefers-color-scheme: dark) {
+  body { background: #1c1c1a; color: #e8e8e0; }
+  .header { border-color: #333; }
+  .controls input { background: #2a2a28; border-color: #444; color: #e8e8e0; }
+  .fbtn { border-color: #444; color: #aaa; }
+  .fbtn.active { background: #e8e8e0; color: #1a1a1a; border-color: #e8e8e0; }
+  .card { background: #2a2a28; border-color: #3a3a38; }
+  .card:hover { border-color: #666; }
+  .card.selected { border-color: #4d9fdd; background: #1a2d3d; }
+  .card-name { color: #e8e8e0; }
+  .card.selected .card-name { color: #7dc0f0; }
+  .bar { border-color: #333; }
+  .bar-count { color: #888; }
+  .bar button { background: #2a2a28; border-color: #444; color: #e8e8e0; }
+  .bar button:hover { background: #333; }
+  .bar button.primary { background: #e8e8e0; color: #1a1a1a; }
+  .bar button.primary:hover { background: #ccc; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>LUT 浏览器</h1>
+    <p>点击选择要应用的 LUT，可多选，然后生成 bash 命令</p>
+  </div>
+  <div class="controls">
+    <input type="text" id="search" placeholder="搜索 LUT 名称…" oninput="render()">
+    <div class="filter-btns" id="brands"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="bar">
+    <span class="bar-count" id="count"></span>
+    <button onclick="selectAll()">全选当前</button>
+    <button onclick="clearSel()">清除选择</button>
+    <button class="primary" onclick="genCmd()">生成命令</button>
+  </div>
+  <div class="cmd-box" id="cmdbox">
+    <button class="copy-btn" onclick="copyCmd()">复制</button>
+    <span id="cmdtext"></span>
+  </div>
+</div>
+
+<script>
+const LUT_DIR = "/Users/fangxiaoling/Documents/LUTs"; // 这里改成你的 LUT 文件夹路径
+const IMG_DIR = "/Users/fangxiaoling/Downloads"; // 这里改成你想要处理的图片文件夹路径，脚本会对这个文件夹里的图片应用选中的 LUT
+const SCRIPT  = "~/Documents/LUTs/lut.py"; // 这里改成你的 lut.py 脚本路径，脚本内容可以参考我之前发给你的那个示例脚本，或者你自己的版本。这个脚本应该接受两个参数：图片文件夹路径和 LUT 文件路径，然后对图片应用 LUT 并保存结果。
+
+const luts = [
+  "AGFA Chrome RSX II 200 (Exp. 2006).cube",
+  "Adox Color Implosion 100.cube",
+  "Agfa Agfacolor 100.cube",
+  "Agfa Agfacolor Portrait XPS 160.cube",
+  "Agfa Agfacolor XPS 200 (Exp. 1991).cube",
+  "Agfa Scala 200x.cube",
+  "Ambrotype (by Anatolee Green) nomal.cube",
+  "Apple_Log_BT2020_to_POSI_33.cube",
+  "Astrum Color Negative 125.cube",
+  "Canon_CLog3_BT2020_to_POSI_33.cube",
+  "Canon_CLog3_CinemaGamut_to_POSI_33.cube",
+  "Cinestill 50D + Kodak Endura.cube",
+  "Cinestill 800T + Kodak Endura.cube",
+  "DJI_Pocket4_DLog_OFFICIAL_to_POSI_33.cube",
+  "Fuji Eterna Vivid 500 (Exp. 2013) + 2383.cube",
+  "Fuji Eterna Vivid 500 (Exp. 2013) + 3513.cube",
+  "Fuji Reala 500D (Exp.2013) + 2383.cube",
+  "Fujichrome CDU-II (cross).cube",
+  "Fujichrome Velvia 100.cube",
+  "Fujichrome Velvia 50 + 2383.cube",
+  "Fujicolor 100 + 3513.cube",
+  "Fujicolor 100 + Kodak Endura.cube",
+  "Fujicolor C200 + 3513.cube",
+  "Fujicolor C200 + Kodak Endura.cube",
+  "Fujicolor Natura 1600 + 3513.cube",
+  "Fujicolor Natura 1600 + Kodak Endura.cube",
+  "Fujicolor Print (Industrail) 100 + 3513.cube",
+  "Fujicolor Print (Industrail) 100 + Kodak Endura.cube",
+  "Fujicolor Print (Industrail) 400 + 3513.cube",
+  "Fujicolor Print (Industrail) 400 + Kodak Endura.cube",
+  "Fujicolor Pro 400H Kodak Endura.cube",
+  "Fujifilm FP-100c (Digital Intermediate).cube",
+  "Fujifilm FP-100c.cube",
+  "Fujifilm Instax + 2383.cube",
+  "Fujifilm Neopan Acros 100.cube",
+  "Fujifilm_ClassicNeg_33_Rec709.cube",
+  "Fujifilm_FLog2C_FGamutC_to_POSI_33.cube",
+  "GREG WLM.cube",
+  "Ilford HP5 Plus 400 Push +2.cube",
+  "Ilford HP5 Plus 400.cube",
+  "Ilford XP2 Super 400.cube",
+  "Kodak Aerocolor IV 125.cube",
+  "Kodak Eastman Double-X 5222.cube",
+  "Kodak Ektar 25 (Exp. 1996) + 2383.cube",
+  "Kodak Ektar 25 (Exp. 1996) + Kodak Endura paper.cube",
+  "Kodak Gold 200.cube",
+  "Kodak Kodachrome 64 (Experimental).cube",
+  "Kodak Plus-X Pan 125 (Exp. 1979).cube",
+  "Kodak Portra 400 + Endura.cube",
+  "Kodak Supra 100 + 2383.cube",
+  "Kodak Supra 100 + Kodak Endura.cube",
+  "Kodak Ultramax 400 + 2383.cube",
+  "Kodak Ultramax 400 + Kodak Endura.cube",
+  "Kodak Vision3 200T + 2383.cube",
+  "Kodak Vision3 200T + Kodak Endura.cube",
+  "Kodak Vision3 250D + 2383.cube",
+  "Kodak Vision3 500T + 2383.cube",
+  "Kodak Vision3 50D + 2383.cube",
+  "Kodak Vision3 50D + Kodak Endura.cube",
+  "Konica Centuria 100 DNP + 3513.cube",
+  "Konica Centuria 100 DNP + Kodak Endura.cube",
+  "Konica Minolta VX400 Super.cube",
+  "Konika Impresa 50 (Exp. 2006) + 2383.cube",
+  "Konika Impresa 50 (Exp. 2006) + Kodak Endrua.cube",
+  "LEICA BLE.cube","LEICA BLU.cube","LEICA BRS.cube","LEICA BW HC.cube",
+  "LEICA BW NAT.cube","LEICA CHR.cube","LEICA CLS.cube","LEICA CNT.cube",
+  "LEICA ETN.cube","LEICA IA.cube","LEICA NAT.cube","LEICA SEL.cube",
+  "LEICA SEP.cube","LEICA SLV.cube","LEICA TEL.cube","LEICA VIV.cube",
+  "Lomochrome Metropolis XP 100-400.cube",
+  "Lomochrome Purple XP 100-400.cube",
+  "Nikon_NLog_BT2020_to_POSI_33.cube",
+  "ORWO Chrom UT21 Daylight (Exp. 1992).cube",
+  "Panasonic_VLog_VGamut_to_POSI_33.cube",
+  "Pentax_BleachBypass_33_Rec709.cube",
+  "Pentax_CrossProcessing1__33_Rec709.cube",
+  "Pentax_CrossProcessing2__33_Rec709.cube",
+  "Pentax_CrossProcessing3__33_Rec709.cube",
+  "Pentax_Fuyuno_33_Rec709.cube",
+  "Pentax_Gold_33_Rec709.cube",
+  "Pentax_Harubeni_33_Rec709.cube",
+  "Pentax_Katen_33_Rec709.cube",
+  "Pentax_Kyushu_33_Rec709.cube",
+  "Pentax_Miyabi_33_Rec709.cube",
+  "Pentax_Muted_33_Rec709.cube",
+  "Pentax_Radiant_33_Rec709.cube",
+  "Pentax_ReversalFilm_33_Rec709.cube",
+  "Pentax_Satobi_33_Rec709.cube",
+  "Polaroid Polachrome 35 mm (Exp. 1986).cube",
+  "Polaroid Type 100 Sepia (Exp. 2009).cube",
+  "Prokudin-Gorskiy 1906 (experimental).cube",
+  "Ricoh_GR2_Posi_Final_33_Rec709.cube",
+  "Ricoh_GR2_Vivid_33_Rec709.cube",
+  "Ricoh_GR4_CinemaGreen_33_Rec709.cube",
+  "Ricoh_GR4_CinemaYellow_33_Rec709.cube",
+  "Rollei CN200 + 2383.cube",
+  "Rollei CN200 + Kodak Endura.cube",
+  "Rollei Ortho 25.cube",
+  "Sony_SLog3_SGamut3Cine_to_POSI_33.cube",
+  "Sony_SLog3_SGamut3_to_POSI_33.cube",
+  "Svema Type-42 (Exp. 1991).cube"
+];
+
+function getBrand(name) {
+  const n = name.toLowerCase();
+  if (n.startsWith('agfa')) return 'Agfa';
+  if (n.startsWith('fujifilm') || n.startsWith('fujicolor') || n.startsWith('fujichrome') || n.startsWith('fuji ')) return 'Fuji';
+  if (n.startsWith('kodak')) return 'Kodak';
+  if (n.startsWith('leica')) return 'Leica';
+  if (n.startsWith('pentax')) return 'Pentax';
+  if (n.startsWith('ilford')) return 'Ilford';
+  if (n.startsWith('konica') || n.startsWith('konika')) return 'Konica';
+  if (n.startsWith('ricoh')) return 'Ricoh';
+  if (n.startsWith('cinestill')) return 'Cinestill';
+  if (n.startsWith('lomochrome')) return 'Lomo';
+  if (n.startsWith('polaroid')) return 'Polaroid';
+  if (n.startsWith('rollei')) return 'Rollei';
+  if (n.includes('apple')||n.includes('canon')||n.includes('nikon')||n.includes('sony')||n.includes('panasonic')||n.includes('dji')) return '相机Log';
+  return '其他';
+}
+
+const brands = [...new Set(luts.map(getBrand))].sort();
+let activeBrand = 'all';
+let selected = new Set();
+
+const brandsEl = document.getElementById('brands');
+[{k:'all',l:'全部'}, ...brands.map(b=>({k:b,l:b}))].forEach(({k,l}) => {
+  const b = document.createElement('button');
+  b.className = 'fbtn' + (k==='all'?' active':'');
+  b.textContent = l;
+  b.onclick = () => {
+    activeBrand = k;
+    document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    render();
+  };
+  brandsEl.appendChild(b);
+});
+
+function getFiltered() {
+  const q = document.getElementById('search').value.toLowerCase();
+  return luts.filter(l => {
+    const matchBrand = activeBrand === 'all' || getBrand(l) === activeBrand;
+    const matchQ = !q || l.toLowerCase().includes(q);
+    return matchBrand && matchQ;
+  });
+}
+
+function render() {
+  const filtered = getFiltered();
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">没有找到匹配的 LUT</div>';
+  }
+  filtered.forEach(lut => {
+    const name = lut.replace('.cube','');
+    const brand = getBrand(lut);
+    const card = document.createElement('div');
+    card.className = 'card' + (selected.has(lut)?' selected':'');
+    card.innerHTML = `<div class="card-brand">${brand}</div><div class="card-name">${name}</div>`;
+    card.onclick = () => {
+      if (selected.has(lut)) selected.delete(lut); else selected.add(lut);
+      card.classList.toggle('selected');
+      updateCount();
+    };
+    grid.appendChild(card);
+  });
+  updateCount();
+}
+
+function updateCount() {
+  document.getElementById('count').textContent = selected.size > 0
+    ? `已选 ${selected.size} 个 LUT`
+    : `共 ${getFiltered().length} 个，点击选择`;
+}
+
+function selectAll() { getFiltered().forEach(l => selected.add(l)); render(); }
+function clearSel() { selected.clear(); render(); }
+
+function genCmd() {
+  const box = document.getElementById('cmdbox');
+  const sel = selected.size > 0 ? [...selected] : luts;
+  const lines = sel.map(l =>
+    `python3 ${SCRIPT} "${IMG_DIR}" "${LUT_DIR}/${l}"`
+  ).join('\n');
+  document.getElementById('cmdtext').textContent = lines;
+  box.style.display = 'block';
+  box.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function copyCmd() {
+  const text = document.getElementById('cmdtext').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '已复制！';
+    setTimeout(() => btn.textContent = '复制', 1500);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
