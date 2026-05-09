@@ -8,7 +8,7 @@ DaVinci Resolve is overkill just for applying a LUT to still photos. Mobile apps
 
 ## Credits
 
-`.cube` LUT files are provided by **Roger Wang** from [Xiaohongshu (小红书)](https://www.xiaohongshu.com).
+`.cube` LUT files are provided by [**Roger Wang**](https://www.xiaohongshu.com/user/profile/65078711000000001603a919?xsec_token=ABgl7iuhJcDoWVIddRsIhPqkXjoTPhYxzkPjKKSYT8Iyg%3D&xsec_source=pc_search) from [Xiaohongshu (小红书)](https://www.xiaohongshu.com).
 
 ## Setup
 
