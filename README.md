@@ -6,10 +6,6 @@ A lightweight HTML app for applying LUT (Look-Up Table) color grading to photos 
 
 DaVinci Resolve is overkill just for applying a LUT to still photos. Mobile apps exist, but aren't suitable for professional shooters. This tool lets you batch-process an unlimited number of photos at once and walk away — just like dropping off a roll of film.
 
-## Credits
-
-`.cube` LUT files may be provided by [**Roger Wang**](https://www.xiaohongshu.com/user/profile/65078711000000001603a919?xsec_token=ABgl7iuhJcDoWVIddRsIhPqkXjoTPhYxzkPjKKSYT8Iyg%3D&xsec_source=pc_search) from [Xiaohongshu (小红书)](https://www.xiaohongshu.com) in the future...
-
 ## Setup
 
 1. Place `lut.py`, your `.cube` LUT file(s), and your photos into a directory of your choice.
