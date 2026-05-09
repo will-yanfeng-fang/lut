@@ -14,7 +14,7 @@ DaVinci Resolve is overkill just for applying a LUT to still photos. Mobile apps
 ## Usage
 
 1. Open the HTML file in your browser.
-2. Pick the LUT (Fujifilm has made their lut public (here)[https://www.fujifilm-x.com/en-ca/support/download/lut/]) you want to apply.
+2. Pick the LUT (Fujifilm has made their lut public [here](https://www.fujifilm-x.com/en-ca/support/download/lut/)) you want to apply.
 4. Generate the command to apply the LUT to your photos.
 5. Run the command — then go do your own thing while it processes.
 
